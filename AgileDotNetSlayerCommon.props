@@ -1,0 +1,23 @@
+<Project>
+
+    <PropertyGroup>
+
+        <TargetFrameworks>net48;netcoreapp3.1;net6.0</TargetFrameworks>
+        <TargetFramework Condition="'$(TargetFrameworks)' == ''">net6.0</TargetFramework>
+        <IsDotNetFramework>false</IsDotNetFramework>
+        <IsDotNet>false</IsDotNet>
+        <IsSelfContainedDotNet>false</IsSelfContainedDotNet>
+        <IsDotNetFramework Condition="$(TargetFramework.StartsWith(net4))">true</IsDotNetFramework>
+        <IsDotNet Condition="!$(TargetFramework.StartsWith(net4))">true</IsDotNet>
+        <LangVersion>latest</LangVersion>
+        <NeutralLanguage>en</NeutralLanguage>
+        <Version>1.0.0.0</Version>
+        <InformationalVersion>v1.0.0</InformationalVersion>
+        <Copyright>Copyright (C) 2021-2022 CodeStrikers.org</Copyright>
+        <Description>A deobfuscator and devirtualizer for Agile.NET</Description>
+        <Company>CodeStrikers.org</Company>
+        <DebugType>embedded</DebugType>
+        
+    </PropertyGroup>
+    
+</Project>

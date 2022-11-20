@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\AgileDotNetSlayerCommon.props" />
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<OutputPath>..\bin\$(Configuration)\</OutputPath>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="de4dot.blocks" Condition="'$(IsDotNetFramework)' == 'true'">
+			<HintPath>..\libs\net35\de4dot.blocks.dll</HintPath>
+		</Reference>
+		<Reference Include="de4dot.blocks" Condition="'$(IsDotNet)' == 'true'">
+			<HintPath>..\libs\netcoreapp3.1\de4dot.blocks.dll</HintPath>
+		</Reference>
+		<PackageReference Include="dnlib" Version="3.6.0" />
+	</ItemGroup>
+
+</Project>

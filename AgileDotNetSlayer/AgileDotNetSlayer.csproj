@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\AgileDotNetSlayerCommon.props" />
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<OutputPath>..\bin\$(Configuration)\</OutputPath>
+		<Prefer32Bit>true</Prefer32Bit>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\AgileDotNetSlayer.Core\AgileDotNetSlayer.Core.csproj" />
+	</ItemGroup>
+
+</Project>
