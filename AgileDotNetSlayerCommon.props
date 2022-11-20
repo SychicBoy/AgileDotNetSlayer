@@ -13,8 +13,8 @@
         <NeutralLanguage>en</NeutralLanguage>
         <Version>1.0.0.0</Version>
         <InformationalVersion>v1.0.0</InformationalVersion>
-        <Copyright>Copyright (C) 2021-2022 CodeStrikers.org</Copyright>
-        <Description>A deobfuscator and devirtualizer for Agile.NET</Description>
+        <Copyright>Copyright (C) 2022 CodeStrikers.org</Copyright>
+        <Description>A simple deobfuscator for Agile.NET</Description>
         <Company>CodeStrikers.org</Company>
         <DebugType>embedded</DebugType>
         
