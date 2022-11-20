@@ -51,7 +51,7 @@ namespace AgileDotNetSlayer.Core
                 return false;
             }
 
-            Logger.Info($"{Options.Stages.Count}/5 Modules loaded...");
+            Logger.Info($"{Options.Stages.Count}/6 Modules loaded...");
 
             return true;
         }
