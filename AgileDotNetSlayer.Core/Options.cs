@@ -57,7 +57,8 @@ namespace AgileDotNetSlayer.Core
             new ControlFlowDeobfuscator(),
             new StringDecrypter(),
             new ResourceResolver(),
-            new Cleaner()
+            new Cleaner(),
+            new DetectProtections()
         };
     }
 }
