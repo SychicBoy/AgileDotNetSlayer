@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using System.Text;
 using AgileDotNetSlayer.Core.Interfaces;
+using de4dot.blocks;
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
 
@@ -26,35 +27,22 @@ namespace AgileDotNetSlayer.Core.Stages
     {
         public void Run(IContext context)
         {
-            if (!InitializeDecrypter(context))
+            if (!Initialize(context))
             {
                 context.Logger.Warn("Could not find any encrypted string.");
                 return;
             }
 
-            var requiredLocals = new[]
-            {
-                "System.Text.StringBuilder",
-                "System.Collections.Hashtable"
-            };
-
-            foreach (var type in context.Module.GetTypes())
-            foreach (var method in type.Methods.Where(x => x.HasBody && x.Body.HasInstructions))
+            foreach (var method in context.Module.GetTypes()
+                         .SelectMany(type => type.Methods.Where(x => x.HasBody && x.Body.HasInstructions)))
                 for (var i = 0; i < method.Body.Instructions.Count; i++)
                     try
                     {
                         if (!method.Body.Instructions[i].OpCode.Equals(OpCodes.Ldstr) ||
                             !method.Body.Instructions[i + 1].OpCode.Equals(OpCodes.Call) ||
                             method.Body.Instructions[i + 1].Operand is not MethodDef calledMethod ||
-                            calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[0]) ||
-                            calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[1]) ||
-                            calledMethod.DeclaringType.Fields.All(x => x.FieldType.FullName != "System.Byte[]") ||
-                            calledMethod.DeclaringType.Fields.All(x =>
-                                x.FieldType.FullName != "System.Collections.Hashtable"))
+                            !MethodEqualityComparer.CompareDeclaringTypes.Equals(calledMethod, _decrypterMethod))
                             continue;
-
-                        if (_data == null)
-                            throw new InvalidOperationException("String decrypter is not initialized.");
 
                         var data = DecryptString(method.Body.Instructions[i].Operand as string);
                         if (data == null)
@@ -63,10 +51,7 @@ namespace AgileDotNetSlayer.Core.Stages
                         method.Body.Instructions[i].Operand = data;
                         method.Body.Instructions[i + 1].OpCode = OpCodes.Nop;
                         Count++;
-                    }
-                    catch
-                    {
-                    }
+                    } catch { }
 
             if (Count > 0)
                 context.Logger.Info(Count + " Strings decrypted.");
@@ -74,33 +59,71 @@ namespace AgileDotNetSlayer.Core.Stages
                 context.Logger.Warn("Could not find any encrypted string.");
         }
 
-        private bool InitializeDecrypter(IContext context)
+        private bool Initialize(IContext context)
         {
             if (_data != null)
                 return true;
-            foreach (var type in context.Module.GetTypes())
-                try
-                {
-                    if (type.FindStaticConstructor() == null ||
-                        type.FindStaticConstructor().Body.Instructions
-                            .First(x => x.OpCode.Equals(OpCodes.Ldtoken)).Operand is not FieldDef dataField)
-                        continue;
+            if (!FindDecrypterMethod(context))
+                return true;
 
-                    _data = context.Module.ReadDataAt(dataField.RVA, (int)dataField.GetFieldSize());
+            var cctor = _decrypterMethod.DeclaringType.FindStaticConstructor();
+            if (cctor is not { HasBody: true, Body.HasInstructions: true })
+                return false;
 
-                    if (_data == null)
-                        continue;
+            foreach (var instr in cctor.Body.Instructions)
+            {
+                if (!instr.OpCode.Equals(OpCodes.Ldtoken) || instr.Operand is not FieldDef dataField)
+                    continue;
 
-                    Cleaner.AddTypeToBeRemoved(type);
-                    foreach (var method in type.Methods)
-                        Cleaner.AddCallToBeRemoved(method);
-                    Cleaner.AddTypeToBeRemoved(dataField.DeclaringType);
+                _data = context.Module.ReadDataAt(dataField.RVA, (int)dataField.GetFieldSize());
 
-                    return true;
-                }
-                catch
-                {
-                }
+                if (_data == null)
+                    continue;
+
+                Cleaner.AddTypeToBeRemoved(dataField.DeclaringType);
+                Cleaner.AddTypeToBeRemoved(_decrypterMethod.DeclaringType);
+
+                foreach (var methodDef in _decrypterMethod.DeclaringType.Methods)
+                    Cleaner.AddCallToBeRemoved(methodDef);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool FindDecrypterMethod(IContext context)
+        {
+            var requiredLocals = new[]
+            {
+                "System.Text.StringBuilder",
+                "System.Collections.Hashtable"
+            };
+
+            foreach (var methodDef in context.Module.GetTypes()
+                         .Where(type =>
+                             type.Fields.Any(x => x.FieldType.FullName != "System.Byte[]") &&
+                             type.Fields.Any(x => x.FieldType.FullName != "System.Collections.Hashtable"))
+                         .SelectMany(
+                             type => type.Methods.Where(x =>
+                                 DotNetUtils.IsMethod(x, "System.String", "(System.String)")),
+                             (type, method) => new { type, method })
+                         .Where(method =>
+                             method.method.Body.Variables.Any(x => x.Type.FullName == requiredLocals[0]) &&
+                             method.method.Body.Variables.Any(x => x.Type.FullName == requiredLocals[1]))
+                         .Select(x => x.method))
+                for (var i = 0; i < methodDef.Body.Instructions.Count; i++)
+                    try
+                    {
+                        if (!methodDef.Body.Instructions[i].OpCode.Equals(OpCodes.Ldsfld) ||
+                            methodDef.Body.Instructions[i].Operand is not FieldDef field ||
+                            field.FieldType.FullName != "System.Byte[]" ||
+                            !methodDef.Body.Instructions[i + 1].OpCode.Equals(OpCodes.Ldlen))
+                            continue;
+
+                        _decrypterMethod = methodDef;
+                        return true;
+                    } catch { }
 
             return false;
         }
@@ -113,7 +136,8 @@ namespace AgileDotNetSlayer.Core.Stages
             return stringBuilder.ToString();
         }
 
-        public static long Count;
+        private MethodDef _decrypterMethod;
+        public long Count;
         private byte[] _data;
     }
 }
