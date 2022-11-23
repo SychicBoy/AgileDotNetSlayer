@@ -11,8 +11,8 @@
         <IsDotNet Condition="!$(TargetFramework.StartsWith(net4))">true</IsDotNet>
         <LangVersion>latest</LangVersion>
         <NeutralLanguage>en</NeutralLanguage>
-        <Version>1.1.0.0</Version>
-        <InformationalVersion>v1.1.0</InformationalVersion>
+        <Version>1.3.0.0</Version>
+        <InformationalVersion>v1.3.0</InformationalVersion>
         <Copyright>Copyright (C) 2022 CodeStrikers.org</Copyright>
         <Description>A simple deobfuscator for Agile.NET</Description>
         <Company>CodeStrikers.org</Company>
