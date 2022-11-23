@@ -16,6 +16,7 @@
 using System;
 using AgileDotNetSlayer.Core.Helper;
 using AgileDotNetSlayer.Core.Interfaces;
+using AgileDotNetSlayer.Core.Stages;
 using dnlib.DotNet;
 using dnlib.DotNet.Writer;
 using ILogger = AgileDotNetSlayer.Core.Interfaces.ILogger;
@@ -66,7 +67,8 @@ namespace AgileDotNetSlayer.Core
                     writer = new NativeModuleWriterOptions(Module, false);
 
                 writer.Logger = DummyLogger.NoThrowInstance;
-                writer.MetadataOptions.Flags |= MetadataFlags.PreserveAll;
+                if(DetectProtections.CodeVirtualization(this))
+                    writer.MetadataOptions.Flags |= MetadataFlags.PreserveAll;
                 if (Module.IsILOnly)
                     Module.Write(Options.DestPath, (ModuleWriterOptions)writer);
                 else

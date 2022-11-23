@@ -40,10 +40,10 @@ namespace AgileDotNetSlayer.Core.Stages
             } catch { }
         }
 
-        private static bool CodeVirtualization(IContext context)
+        public static bool CodeVirtualization(IContext context)
             => DotNetUtils.GetResource(context.Module, "_CSVM") is EmbeddedResource;
 
-        private static bool CodeEncryption(IContext context) =>
+        public static bool CodeEncryption(IContext context) =>
             context.Module.GetTypes()
                 .Where(type =>
                     type.Fields.Count >= 1 && type.Fields.Any(x => x.FieldType.FullName == "System.Boolean") &&
