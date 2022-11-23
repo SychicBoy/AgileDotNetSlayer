@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Diagnostics;
 using System.Linq;
 using AgileDotNetSlayer.Core.Helper;
 using AgileDotNetSlayer.Core.Interfaces;
@@ -34,6 +33,19 @@ namespace AgileDotNetSlayer.Core.Stages
                 return;
             }
 
+            var count = FixCalls(context);
+            if (count > 0)
+            {
+                context.Logger.Info(count + " Proxied calls fixed.");
+                CleanUp(context);
+                return;
+            }
+
+            context.Logger.Warn("Could not find any proxied call.");
+        }
+
+        private long FixCalls(IContext context)
+        {
             long count = 0;
             foreach (var method in context.Module.GetTypes()
                          .SelectMany(type => type.Methods.Where(x => x.HasBody && x.Body.HasInstructions)))
@@ -48,14 +60,12 @@ namespace AgileDotNetSlayer.Core.Stages
 
                         var cctor = delegateField.DeclaringType.FindStaticConstructor();
 
-                        if (!CheckConstructor(cctor.DeclaringType, cctor))
+                        if (!CheckConstructor(cctor))
                             continue;
 
                         var operand = Resolve(context, delegateField, out var opcode);
                         if (operand == null)
                             continue;
-                        Debugger.Launch();
-                        Cleaner.AddTypeToBeRemoved(delegateField.DeclaringType);
 
                         instruction.OpCode = OpCodes.Nop;
 
@@ -78,7 +88,18 @@ namespace AgileDotNetSlayer.Core.Stages
                 SimpleDeobfuscator.DeobfuscateBlocks(method);
             }
 
-            context.Logger.Info(count + " Proxied calls fixed.");
+            return count;
+        }
+
+        private void CleanUp(IContext context)
+        {
+            foreach (var type in from type in context.Module.GetTypes().Where(x =>
+                         x.FindStaticConstructor() != null && x.BaseType is { FullName: "System.MulticastDelegate" })
+                     let cctor = type.FindStaticConstructor()
+                     where cctor.HasBody && cctor.Body.HasInstructions
+                     where CheckConstructor(cctor)
+                     select type)
+                Cleaner.AddTypeToBeRemoved(type);
         }
 
         private bool Initialize(IContext context)
@@ -118,8 +139,9 @@ namespace AgileDotNetSlayer.Core.Stages
             return false;
         }
 
-        private bool CheckConstructor(IMDTokenProvider type, MethodDef cctor)
+        private bool CheckConstructor(MethodDef cctor)
         {
+            var type = cctor.DeclaringType;
             var instrs = cctor.Body.Instructions;
             if (instrs.Count != 3)
                 return false;
