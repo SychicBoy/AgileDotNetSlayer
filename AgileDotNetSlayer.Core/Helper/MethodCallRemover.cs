@@ -51,17 +51,15 @@ namespace AgileDotNetSlayer.Core.Helper
                         continue;
                     instr.OpCode = OpCodes.Nop;
                     count++;
-                }
-                catch
-                {
-                }
+                } catch { }
 
             return count;
         }
 
         private static void Add(MethodDef method, MethodDef methodToBeRemoved)
         {
-            if (method == null || methodToBeRemoved == null || !CheckMethod(methodToBeRemoved)) return;
+            if (method == null || methodToBeRemoved == null || !CheckMethod(methodToBeRemoved))
+                return;
             var dict = _methodRefInfos.Find(method);
             if (dict == null)
                 _methodRefInfos.Add(method, dict = new MethodDefAndDeclaringTypeDict<bool>());

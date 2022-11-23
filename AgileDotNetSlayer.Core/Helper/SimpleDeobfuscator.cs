@@ -38,10 +38,7 @@ namespace AgileDotNetSlayer.Core.Helper
                 blocks.RepartitionBlocks();
                 blocks.GetCode(out var instructions, out var exceptionHandlers);
                 DotNetUtils.RestoreBody(method, instructions, exceptionHandlers);
-            }
-            catch
-            {
-            }
+            } catch { }
         }
 
         private static BlocksCflowDeobfuscator _blocksCflowDeob = new();

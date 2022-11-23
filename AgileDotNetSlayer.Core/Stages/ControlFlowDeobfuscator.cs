@@ -26,8 +26,8 @@ namespace AgileDotNetSlayer.Core.Stages
         public void Run(IContext context)
         {
             long count = 0;
-            foreach (var type in context.Module.GetTypes())
-            foreach (var method in type.Methods.Where(x => x.HasBody && x.Body.HasInstructions))
+            foreach (var method in context.Module.GetTypes()
+                         .SelectMany(type => type.Methods.Where(x => x.HasBody && x.Body.HasInstructions)))
             {
                 for (var i = 0; i < method.Body.Instructions.Count; i++)
                     try
@@ -42,10 +42,7 @@ namespace AgileDotNetSlayer.Core.Stages
                         method.Body.Instructions[i].Operand = Math.Abs(value);
                         method.Body.Instructions[i + 1].OpCode = OpCodes.Nop;
                         count++;
-                    }
-                    catch
-                    {
-                    }
+                    } catch { }
 
                 SimpleDeobfuscator.DeobfuscateBlocks(method);
             }

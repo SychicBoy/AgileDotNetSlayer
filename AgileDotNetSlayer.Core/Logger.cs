@@ -13,9 +13,9 @@
     along with AgileDotNetSlayer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using AgileDotNetSlayer.Core.Interfaces;
 using System;
 using System.Reflection;
+using AgileDotNetSlayer.Core.Interfaces;
 
 namespace AgileDotNetSlayer.Core
 {

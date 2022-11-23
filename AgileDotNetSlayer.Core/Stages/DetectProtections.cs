@@ -30,34 +30,31 @@ namespace AgileDotNetSlayer.Core.Stages
                 if (CodeEncryption(context))
                     context.Logger.Warn(
                         "CODE encryption has been detected, incomplete deobfuscation of the assembly may result.");
-            }
-            catch { }
+            } catch { }
 
             try
             {
                 if (CodeVirtualization(context))
                     context.Logger.Warn(
                         "CODE virtualization has been detected, incomplete deobfuscation of the assembly may result.");
-
-            }
-            catch { }
+            } catch { }
         }
 
         private static bool CodeVirtualization(IContext context)
             => DotNetUtils.GetResource(context.Module, "_CSVM") is EmbeddedResource;
 
-        private static bool CodeEncryption(IContext context)
-        {
-            return context.Module.GetTypes()
+        private static bool CodeEncryption(IContext context) =>
+            context.Module.GetTypes()
                 .Where(type =>
                     type.Fields.Count >= 1 && type.Fields.Any(x => x.FieldType.FullName == "System.Boolean") &&
                     type.Methods.Count(x => DotNetUtils.IsMethod(x, "System.Int32", "(System.IntPtr)")) == 4).Any(
-                    type => type.Methods.Where(x => x.HasBody && x.Body.HasInstructions && DotNetUtils.IsMethod(x, "System.Void", "()")).Any(method =>
-                        method.Body.Instructions.Any(x =>
-                            x.OpCode.Equals(OpCodes.Callvirt) &&
-                            x.Operand != null &&
-                            x.Operand.ToString().Contains("System.Reflection.MethodBase::get_MethodHandle") &&
-                            x.Operand.ToString().Contains("System.RuntimeMethodHandle"))));
-        }
+                    type => type.Methods.Where(x =>
+                        x.HasBody && x.Body.HasInstructions && DotNetUtils.IsMethod(x, "System.Void", "()")).Any(
+                        method =>
+                            method.Body.Instructions.Any(x =>
+                                x.OpCode.Equals(OpCodes.Callvirt) &&
+                                x.Operand?.ToString() is { } operand &&
+                                operand.Contains("System.Reflection.MethodBase::get_MethodHandle") &&
+                                operand.Contains("System.RuntimeMethodHandle"))));
     }
 }

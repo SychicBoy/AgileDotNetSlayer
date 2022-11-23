@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using AgileDotNetSlayer.Core.Helper;
 using AgileDotNetSlayer.Core.Interfaces;
@@ -34,8 +35,8 @@ namespace AgileDotNetSlayer.Core.Stages
             }
 
             long count = 0;
-            foreach (var type in context.Module.GetTypes())
-            foreach (var method in type.Methods.Where(x => x.HasBody && x.Body.HasInstructions))
+            foreach (var method in context.Module.GetTypes()
+                         .SelectMany(type => type.Methods.Where(x => x.HasBody && x.Body.HasInstructions)))
             {
                 foreach (var instruction in method.Body.Instructions)
                     try
@@ -53,7 +54,7 @@ namespace AgileDotNetSlayer.Core.Stages
                         var operand = Resolve(context, delegateField, out var opcode);
                         if (operand == null)
                             continue;
-
+                        Debugger.Launch();
                         Cleaner.AddTypeToBeRemoved(delegateField.DeclaringType);
 
                         instruction.OpCode = OpCodes.Nop;
@@ -72,10 +73,7 @@ namespace AgileDotNetSlayer.Core.Stages
                         }
 
                         count++;
-                    }
-                    catch
-                    {
-                    }
+                    } catch { }
 
                 SimpleDeobfuscator.DeobfuscateBlocks(method);
             }
@@ -83,7 +81,7 @@ namespace AgileDotNetSlayer.Core.Stages
             context.Logger.Info(count + " Proxied calls fixed.");
         }
 
-        public bool Initialize(IContext context)
+        private bool Initialize(IContext context)
         {
             var requiredLocals = new[]
             {
@@ -91,35 +89,31 @@ namespace AgileDotNetSlayer.Core.Stages
                 "System.Reflection.Emit.DynamicMethod",
                 "System.Reflection.Emit.ILGenerator"
             };
-            foreach (var method in context.Module.Types.SelectMany(x => x.Methods)
-                         .Where(x => x.HasBody && x.Body.HasInstructions))
-                foreach (var instruction
-                         in method.Body.Instructions)
-                    try
-                    {
-                        if (!instruction.OpCode.Equals(OpCodes.Ldsfld) ||
-                            instruction.Operand is not FieldDef delegateField ||
-                            delegateField.DeclaringType.BaseType.FullName != "System.MulticastDelegate")
-                            continue;
+            foreach (var instruction in context.Module.Types.SelectMany(x => x.Methods)
+                         .Where(x => x.HasBody && x.Body.HasInstructions)
+                         .SelectMany(method => method.Body.Instructions))
+                try
+                {
+                    if (!instruction.OpCode.Equals(OpCodes.Ldsfld) ||
+                        instruction.Operand is not FieldDef delegateField ||
+                        delegateField.DeclaringType.BaseType.FullName != "System.MulticastDelegate")
+                        continue;
 
-                        var calledMethod = DotNetUtils
-                            .GetMethodCalls(delegateField.DeclaringType.FindStaticConstructor()).First()
-                            .ResolveMethodDefThrow();
-                        if (calledMethod == null)
-                            continue;
+                    var calledMethod = DotNetUtils
+                        .GetMethodCalls(delegateField.DeclaringType.FindStaticConstructor()).First()
+                        .ResolveMethodDefThrow();
+                    if (calledMethod == null)
+                        continue;
 
-                        if (calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[0]) ||
-                            calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[1]) ||
-                            calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[2]))
-                            continue;
+                    if (calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[0]) ||
+                        calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[1]) ||
+                        calledMethod.Body.Variables.All(x => x.Type.FullName != requiredLocals[2]))
+                        continue;
 
-                        _decrypterMethod = calledMethod;
-                        Cleaner.AddTypeToBeRemoved(_decrypterMethod.DeclaringType);
-                        return true;
-                    }
-                    catch
-                    {
-                    }
+                    _decrypterMethod = calledMethod;
+                    Cleaner.AddTypeToBeRemoved(_decrypterMethod.DeclaringType);
+                    return true;
+                } catch { }
 
             return false;
         }

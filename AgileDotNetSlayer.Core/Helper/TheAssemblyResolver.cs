@@ -162,10 +162,7 @@ namespace AgileDotNetSlayer.Core.Helper
                 foreach (var dir in di.GetDirectories())
                     if (Regex.IsMatch(dir.Name, @"^\d+(?:\.\d+){3}$"))
                         AddIfExists(paths, basePath, dir.Name);
-            }
-            catch
-            {
-            }
+            } catch { }
         }
 
         private static void AddIfExists(ICollection<string> paths, string basePath, string extraPath)

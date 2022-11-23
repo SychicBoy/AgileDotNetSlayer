@@ -44,8 +44,7 @@ namespace AgileDotNetSlayer.Core
                 ModuleContext = GetModuleContext();
                 AssemblyModule = new AssemblyModule(Options.SourcePath, ModuleContext);
                 Module = AssemblyModule.Load();
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 Logger.Error($"Failed to load assembly. {ex.Message}.");
                 return false;
@@ -76,8 +75,7 @@ namespace AgileDotNetSlayer.Core
                 Module?.Dispose();
 
                 Logger.Info("Saved to: " + Options.DestFileName);
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 Logger.Error($"An unexpected error occurred during writing output file. {ex.Message}.");
             }

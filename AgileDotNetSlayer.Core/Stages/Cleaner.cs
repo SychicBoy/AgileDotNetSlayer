@@ -56,7 +56,8 @@ namespace AgileDotNetSlayer.Core.Stages
 
         private static void RemoveCallsToObfuscatorTypes(IContext context)
         {
-            if (CallsToRemove.Count <= 0) return;
+            if (CallsToRemove.Count <= 0)
+                return;
             try
             {
                 var count = MethodCallRemover.RemoveCalls(context, CallsToRemove.ToList());
@@ -68,14 +69,8 @@ namespace AgileDotNetSlayer.Core.Stages
                     {
                         if (DotNetUtils.IsEmpty(method))
                             method.DeclaringType.Remove(method);
-                    }
-                    catch
-                    {
-                    }
-            }
-            catch
-            {
-            }
+                    } catch { }
+            } catch { }
         }
 
         private static void RemoveObfuscatorTypes(IContext context)
@@ -87,19 +82,13 @@ namespace AgileDotNetSlayer.Core.Stages
                         typeDef.DeclaringType.NestedTypes.Remove(typeDef);
                     else
                         context.Module.Types.Remove(typeDef);
-                }
-                catch
-                {
-                }
+                } catch { }
 
             foreach (var rsrc in ResourcesToRemove)
                 try
                 {
                     context.Module.Resources.Remove(context.Module.Resources.Find(rsrc.Name));
-                }
-                catch
-                {
-                }
+                } catch { }
         }
 
         private static void FixMdHeaderVersion(IContext context)

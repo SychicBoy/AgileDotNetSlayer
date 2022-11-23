@@ -28,7 +28,8 @@ namespace AgileDotNetSlayer.Core.Helper
                 throw new ApplicationException("decryptedResourceData is null");
             var resourceModule = ModuleDefMD.Load(decryptedResourceData);
 
-            foreach (var rsrc in resourceModule.Resources) module.Resources.Add(rsrc);
+            foreach (var rsrc in resourceModule.Resources)
+                module.Resources.Add(rsrc);
         }
 
         public static byte[] ReadModule(ModuleDef module) => ReadFile(module.Location);

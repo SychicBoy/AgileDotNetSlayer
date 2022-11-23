@@ -28,7 +28,8 @@ namespace AgileDotNetSlayer.Core
             var path = string.Empty;
             foreach (var key in args)
             {
-                if (!File.Exists(key)) continue;
+                if (!File.Exists(key))
+                    continue;
                 path = key;
                 break;
             }
@@ -40,7 +41,8 @@ namespace AgileDotNetSlayer.Core
             SourceFileName = Path.GetFileNameWithoutExtension(path);
             SourceFileExt = Path.GetExtension(path);
             SourceDir = Path.GetFullPath(Path.GetDirectoryName(path) ?? throw new InvalidOperationException());
-            if (SourceDir != null) DestPath = Path.Combine(SourceDir, $"{SourceFileName}_Slayed{SourceFileExt}");
+            if (SourceDir != null)
+                DestPath = Path.Combine(SourceDir, $"{SourceFileName}_Slayed{SourceFileExt}");
             DestFileName = $"{SourceFileName}_Slayed{SourceFileExt}";
         }
 

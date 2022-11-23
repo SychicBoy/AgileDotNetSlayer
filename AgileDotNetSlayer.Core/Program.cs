@@ -13,11 +13,11 @@
     along with AgileDotNetSlayer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using AgileDotNetSlayer.Core.Interfaces;
 using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using AgileDotNetSlayer.Core.Interfaces;
 
 namespace AgileDotNetSlayer.Core
 {
@@ -34,10 +34,7 @@ namespace AgileDotNetSlayer.Core
             {
                 Console.Clear();
                 logger.PrintLogo();
-            }
-            catch
-            {
-            }
+            } catch { }
 
             IContext context = new Context(new Options(args), logger);
 
@@ -59,8 +56,7 @@ namespace AgileDotNetSlayer.Core
                              try
                              {
                                  deobfuscatorStage.Run(context);
-                             }
-                             catch (Exception ex)
+                             } catch (Exception ex)
                              {
                                  context.Logger.Error($"{deobfuscatorStage.GetType().Name}: {ex.Message}");
                              }
@@ -68,7 +64,8 @@ namespace AgileDotNetSlayer.Core
             {
                 thread.Start();
                 thread.Join();
-                while (thread.IsAlive) Thread.Sleep(500);
+                while (thread.IsAlive)
+                    Thread.Sleep(500);
             }
         }
 
