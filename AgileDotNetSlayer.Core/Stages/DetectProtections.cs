@@ -29,14 +29,14 @@ namespace AgileDotNetSlayer.Core.Stages
             {
                 if (CodeEncryption(context))
                     context.Logger.Warn(
-                        "CODE encryption has been detected, incomplete deobfuscation of the assembly may result.");
+                        "CODE ENCRYPTION HAS BEEN DETECTED, INCOMPLETE DEOBFUSCATION OF THE ASSEMBLY MAY RESULT.");
             } catch { }
 
             try
             {
                 if (CodeVirtualization(context))
                     context.Logger.Warn(
-                        "CODE virtualization has been detected, incomplete deobfuscation of the assembly may result.");
+                        "CODE VIRTUALIZATION HAS BEEN DETECTED, INCOMPLETE DEOBFUSCATION OF THE ASSEMBLY MAY RESULT.");
             } catch { }
         }
 

@@ -27,6 +27,7 @@ namespace AgileDotNetSlayer.Core.Stages
     {
         public void Run(IContext context)
         {
+            var count = 0;
             if (!Initialize(context))
             {
                 context.Logger.Warn("Could not find any encrypted string.");
@@ -50,11 +51,12 @@ namespace AgileDotNetSlayer.Core.Stages
 
                         method.Body.Instructions[i].Operand = data;
                         method.Body.Instructions[i + 1].OpCode = OpCodes.Nop;
-                        Count++;
-                    } catch { }
+                        count++;
+                    }
+                    catch { }
 
-            if (Count > 0)
-                context.Logger.Info(Count + " Strings decrypted.");
+            if (count > 0)
+                context.Logger.Info(count + " Strings decrypted.");
             else
                 context.Logger.Warn("Could not find any encrypted string.");
         }
@@ -106,7 +108,8 @@ namespace AgileDotNetSlayer.Core.Stages
                              type.Fields.Any(x => x.FieldType.FullName != "System.Collections.Hashtable"))
                          .SelectMany(
                              type => type.Methods.Where(x =>
-                                 DotNetUtils.IsMethod(x, "System.String", "(System.String)")),
+                                 DotNetUtils.IsMethod(x, "System.String", "(System.String)") && x.HasBody &&
+                                 x.Body.HasInstructions && x.Body.HasVariables),
                              (type, method) => new { type, method })
                          .Where(method =>
                              method.method.Body.Variables.Any(x => x.Type.FullName == requiredLocals[0]) &&
@@ -123,7 +126,8 @@ namespace AgileDotNetSlayer.Core.Stages
 
                         _decrypterMethod = methodDef;
                         return true;
-                    } catch { }
+                    }
+                    catch { }
 
             return false;
         }
@@ -137,7 +141,6 @@ namespace AgileDotNetSlayer.Core.Stages
         }
 
         private MethodDef _decrypterMethod;
-        public long Count;
         private byte[] _data;
     }
 }
